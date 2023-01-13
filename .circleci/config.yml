@@ -25,7 +25,8 @@ jobs:
       - checkout
       - run: 
           name: "Print Hello"
-          command: "echo Print Hello Farh"
+          command: echo "Print Hello" 
+
   print_world: 
     docker: 
       - image: circleci/node:13.8.0
@@ -44,16 +45,42 @@ jobs:
           name: "echo an env var that is part of our project"
           command: |
             echo $MY_ENV_VAR
+# sharing files
+  save_hello_world_output:
+    docker: 
+      - image: cimg/base:2020.01
+    steps:
+      - checkout
+      - run:
+          command: echo "Hello World" > output.txt
+      - persist_to_workspace:
+          root: ~/
+          paths:
+             - output.txt
+  print_output_file:
+    docker:
+      - image: cimg/base:2020.01
+    steps:
+      - attach_workspace:
+          at: ~/
+      - run: cat output.txt
+
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  say-hello-workflow:
+#  say-hello-workflow:
     jobs:
       - say-hello
       - print_hello
       - print_world:
           requires:
             - print_hello
-  test-env-vars:
+#  test-env-vars:
     jobs:
       - build
+  my_workflow:
+    jobs:
+      - save_hello_world_output
+      - print_output_file:
+          requires:
+            - save_hello_world_output
